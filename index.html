@@ -23,13 +23,13 @@
         }
         .tab-content { 
             display: none; 
-            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            animation: fadeIn 0.3s ease-out; 
         }
         .tab-content.active { 
             display: block; 
         }
         @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(10px); } 
+            from { opacity: 0; transform: translateY(5px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
         
@@ -37,26 +37,14 @@
             background: #0f172a !important; 
             border: 1px solid #1e293b !important; 
             color: white !important; 
-            padding: 16px !important; 
-            border-radius: 20px !important; 
+            padding: 14px !important; 
+            border-radius: 18px !important; 
             outline: none; 
             width: 100%; 
             font-size: 16px;
-            transition: all 0.2s;
-        }
-        input:focus { 
-            border-color: #38bdf8 !important; 
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); 
         }
         .nav-btn { transition: all 0.3s; color: #64748b; }
         .nav-btn.active { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
-        .btn-ready { background: linear-gradient(135deg, #10b981, #059669); }
-        
-        @keyframes pulse-sky {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.05); }
-        }
-        .ai-loading-pulse { animation: pulse-sky 2s infinite ease-in-out; }
     </style>
 </head>
 <body class="pb-32">
@@ -64,16 +52,15 @@
 
     <div id="app" class="max-w-md mx-auto p-6 pt-10">
         
-        <!-- Login Screen -->
-        <div id="loginScreen" class="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center p-6" style="display:none;">
+        <div id="loginScreen" class="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center p-6" style="display:flex;">
             <div class="glass p-10 rounded-[45px] w-full max-w-sm text-center border-white/10 shadow-2xl">
                 <div class="w-20 h-20 bg-sky-500 rounded-[25px] mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-sky-500/20">
                     <i data-lucide="cloud" class="w-10 h-10 text-white"></i>
                 </div>
                 <h2 class="text-3xl font-black mb-10 tracking-tight">מי מנהל היום?</h2>
                 <div class="grid gap-4">
-                    <button onclick="loginUser('עמוס')" class="p-6 rounded-3xl bg-white/5 text-xl font-bold border border-white/10 active:scale-95 transition-all hover:bg-white/10">עמוס</button>
-                    <button onclick="loginUser('מעיין')" class="p-6 rounded-3xl bg-white/5 text-xl font-bold border border-white/10 active:scale-95 transition-all hover:bg-white/10">מעיין</button>
+                    <button onclick="loginUser('עמוס')" class="p-6 rounded-3xl bg-white/5 text-xl font-bold border border-white/10 active:scale-95 transition-all">עמוס</button>
+                    <button onclick="loginUser('מעיין')" class="p-6 rounded-3xl bg-white/5 text-xl font-bold border border-white/10 active:scale-95 transition-all">מעיין</button>
                 </div>
             </div>
         </div>
@@ -83,11 +70,10 @@
                 <p id="currentUserDisplay" class="text-sky-400 text-[10px] font-black mb-1 uppercase tracking-widest"></p>
                 <div class="flex items-center gap-2">
                     <h1 class="text-3xl font-black tracking-tighter">ניהול ענן</h1>
-                    <div id="cloudStatus" class="w-2 h-2 rounded-full bg-slate-700"></div>
-                    <span id="connectionText" class="text-[8px] font-bold text-slate-500 uppercase">מאתחל...</span>
+                    <div id="cloudStatus" class="w-2 h-2 rounded-full bg-amber-500"></div>
                 </div>
             </div>
-            <button onclick="logout()" class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-slate-500 hover:text-white transition-colors">
+            <button onclick="logout()" class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-slate-500 hover:text-white">
                 <i data-lucide="log-out" class="w-5 h-5"></i>
             </button>
         </header>
@@ -96,51 +82,32 @@
             <section class="glass p-7 rounded-[40px] space-y-4">
                 <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">מכירה חדשה</h3>
                 <input type="text" id="orderCust" placeholder="שם הלקוח">
-                <input type="tel" id="orderPhone" placeholder="טלפון לקוח (אופציונלי)">
-                <select id="orderItemSelect"><option value="">טוען קטלוג...</option></select>
+                <input type="tel" id="orderPhone" placeholder="טלפון (למשל: 0501234567)">
+                <select id="orderItemSelect"><option value="">טוען מוצרים...</option></select>
                 <input type="number" id="orderPaid" placeholder="כמה שולם? (₪)">
-                <button onclick="addOrder()" class="w-full bg-sky-500 py-5 rounded-[22px] font-black text-lg shadow-xl shadow-sky-500/20 active:scale-[0.98] transition-all">שמור לענן 🚀</button>
+                <button onclick="addOrder()" class="w-full bg-sky-500 py-5 rounded-[22px] font-black text-lg shadow-xl shadow-sky-500/20 active:scale-[0.98]">שמור הזמנה ✨</button>
             </section>
             <div id="orderList" class="space-y-4"></div>
         </div>
 
         <div id="tab-prod" class="tab-content space-y-6">
-            <h2 class="text-2xl font-black tracking-tight px-2 text-sky-400">תור הדפסות חי</h2>
+            <h2 class="text-2xl font-black tracking-tight px-2 text-sky-400">תור הדפסות</h2>
             <div id="prodList" class="space-y-4"></div>
         </div>
 
         <div id="tab-catalog" class="tab-content space-y-8">
             <section class="glass p-7 rounded-[40px] space-y-5">
-                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">הוספה לקטלוג (עד 15₪)</h3>
-                <input type="text" id="catName" placeholder="שם המוצר">
-                <input type="number" id="catPrice" placeholder="מחיר (₪)">
-
-                <!-- AI Preview Area -->
-                <div id="imageContainer" class="aspect-square glass rounded-3xl flex items-center justify-center overflow-hidden border-2 border-dashed border-white/10 relative bg-slate-900/50">
-                    <img id="aiPreview" class="w-full h-full object-cover hidden" alt="AI Preview">
-                    <div id="canvasPlaceholder" class="text-slate-500 text-center px-4 flex flex-col items-center gap-3">
-                        <i data-lucide="image" class="w-8 h-8 opacity-20"></i>
-                        <span class="text-[10px] italic">התמונה תופיע כאן</span>
-                    </div>
-                    <div id="aiLoading" class="absolute inset-0 bg-slate-950/80 items-center justify-center hidden flex-col gap-3">
-                        <div class="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span class="text-[10px] font-bold text-sky-400 ai-loading-pulse">מייצר הדמיה אמיתית...</span>
-                    </div>
-                </div>
-
-                <button id="genBtn" onclick="generateAiImage()" class="w-full glass bg-white/5 text-white py-4 rounded-[20px] text-xs font-bold border border-white/10 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                    <i data-lucide="sparkles" class="w-4 h-4 text-sky-400"></i>
-                    <span>צור תמונה עם AI אמיתי</span>
-                </button>
-                
-                <button onclick="addCatalogItem()" class="w-full bg-emerald-500 py-5 rounded-[22px] font-black text-lg active:scale-[0.98] transition-all">הוסף לקטלוג המשותף</button>
+                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">הוספת מוצר לקטלוג</h3>
+                <input type="text" id="catName" placeholder="שם המוצר (למשל: דרקון)">
+                <input type="number" id="catPrice" placeholder="מחיר קבוע (₪)">
+                <button onclick="addCatalogItem()" class="w-full bg-emerald-500 py-5 rounded-[22px] font-black text-lg active:scale-[0.98]">הוסף לקטלוג</button>
             </section>
-            <div id="catalogList" class="grid grid-cols-2 gap-4"></div>
+            <div id="catalogList" class="grid grid-cols-1 gap-4"></div>
         </div>
 
         <div id="tab-money" class="tab-content space-y-8">
-            <div class="glass p-10 rounded-[50px] text-center border-white/5 shadow-2xl">
-                <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">מאזן רווח נקי</h3>
+            <div class="glass p-10 rounded-[50px] text-center border-white/5">
+                <h3 class="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-4">רווח נקי</h3>
                 <div id="stat-profit" class="text-6xl font-black text-emerald-400 mb-6 tracking-tighter">0₪</div>
                 <div class="grid grid-cols-2 gap-6 border-t border-white/5 pt-8">
                     <div><div class="text-[10px] text-slate-500 font-black">הכנסות</div><div id="stat-revenue" class="font-black text-lg">0₪</div></div>
@@ -149,15 +116,13 @@
             </div>
             
             <section class="glass p-7 rounded-[40px] space-y-5">
-                <h3 class="text-[11px] font-black text-rose-400 uppercase tracking-widest">רישום הוצאה</h3>
-                <input type="text" id="expName" placeholder="מה קנינו? (למשל: פילמנט)">
-                <input type="number" id="expPrice" placeholder="כמה עלה? (₪)">
-                <button onclick="addExpense()" class="w-full bg-rose-500 py-5 rounded-[22px] font-black text-lg active:scale-[0.98] transition-all">הוסף הוצאה</button>
+                <input type="text" id="expName" placeholder="תיאור הוצאה">
+                <input type="number" id="expPrice" placeholder="סכום (₪)">
+                <button onclick="addExpense()" class="w-full bg-rose-500 py-5 rounded-[22px] font-black text-lg">הוסף הוצאה</button>
             </section>
         </div>
     </div>
 
-    <!-- Navigation Bar -->
     <nav class="fixed bottom-8 left-6 right-6 h-20 glass rounded-[30px] flex justify-around items-center px-4 z-[100] border-white/10 shadow-2xl">
         <button onclick="switchTab('sales')" class="nav-btn p-4 rounded-2xl active" data-tab="sales"><i data-lucide="shopping-bag"></i></button>
         <button onclick="switchTab('prod')" class="nav-btn p-4 rounded-2xl" data-tab="prod"><i data-lucide="printer"></i></button>
@@ -170,39 +135,36 @@
         import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Global State
         window.state = {
             user: localStorage.getItem('3d_user') || null,
             products: JSON.parse(localStorage.getItem('3d_local_products') || '[]'),
             orders: JSON.parse(localStorage.getItem('3d_local_orders') || '[]'),
             expenses: JSON.parse(localStorage.getItem('3d_local_expenses') || '[]'),
-            tempImage: null,
             mode: 'local'
         };
 
-        const FB_CONFIG = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const APP_ID = "3d-print-cloud-v1";
-        const BASE_PATH = ['artifacts', APP_ID, 'public', 'data'];
         let db = null;
+        const APP_ID = "3d-cloud-v1";
+        const BASE_PATH = ['artifacts', APP_ID, 'public', 'data'];
 
         window.toast = (msg) => {
             const t = document.getElementById('toast');
             t.innerText = msg;
             t.style.opacity = '1';
-            t.style.transform = 'translate(-50%, 0)';
-            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, -10px)'; }, 2000);
+            setTimeout(() => t.style.opacity = '0', 2000);
         };
 
         window.loginUser = (name) => {
             window.state.user = name;
             localStorage.setItem('3d_user', name);
+            document.getElementById('loginScreen').style.display = 'none';
             window.render();
         };
 
         window.logout = () => {
             window.state.user = null;
             localStorage.removeItem('3d_user');
-            window.render();
+            document.getElementById('loginScreen').style.display = 'flex';
         };
 
         window.switchTab = (id) => {
@@ -212,88 +174,46 @@
             document.querySelector(`[data-tab="${id}"]`).classList.add('active');
         };
 
-        window.generateAiImage = async () => {
-            const name = document.getElementById('catName').value;
-            if(!name) return window.toast("כתוב שם למוצר קודם");
-            
-            const loader = document.getElementById('aiLoading');
-            const preview = document.getElementById('aiPreview');
-            const placeholder = document.getElementById('canvasPlaceholder');
-            
-            loader.classList.remove('hidden');
-            loader.classList.add('flex');
-            
-            // Clean prompt for better AI results
-            const prompt = encodeURIComponent(`3D printed plastic figure of ${name}, high detail, macro photography, studio lighting, solid bright color, centered on clean background`);
-            const imageUrl = `https://pollinations.ai/p/${prompt}?width=512&height=512&seed=${Math.floor(Math.random()*10000)}&nologo=true`;
-            
-            try {
-                // Preload image
-                const img = new Image();
-                img.src = imageUrl;
-                await img.decode();
-                
-                window.state.tempImage = imageUrl;
-                preview.src = imageUrl;
-                preview.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                window.toast("הדמיה מוכנה! ✨");
-            } catch(e) {
-                window.toast("שגיאה ביצירת תמונה");
-            } finally {
-                loader.classList.add('hidden');
-                loader.classList.remove('flex');
-            }
-        };
-
         window.addOrder = async () => {
             const cust = document.getElementById('orderCust').value;
             const phone = document.getElementById('orderPhone').value;
             const select = document.getElementById('orderItemSelect');
             const paid = parseFloat(document.getElementById('orderPaid').value) || 0;
             
-            if(!cust || !select.value) return window.toast("מלא פרטי הזמנה");
+            if(!cust || !select.value) return window.toast("מלא שם ומוצר");
             
             const newOrder = {
-                customer: cust, 
-                phone, 
-                item: select.options[select.selectedIndex].text.split(' (')[0],
-                cost: parseFloat(select.value), 
-                paid,
-                status: "⏳ בתור", 
-                seller: window.state.user,
-                timestamp: Date.now()
+                customer: cust, phone, item: select.options[select.selectedIndex].text.split(' (')[0],
+                cost: parseFloat(select.value), paid, status: "⏳ בתור", seller: window.state.user, timestamp: Date.now()
             };
 
             try {
-                if(window.state.mode === 'cloud' && db) {
+                if(db && window.state.mode === 'cloud') {
                     await addDoc(collection(db, ...BASE_PATH, 'orders'), newOrder);
                 } else { throw "local"; }
             } catch (e) {
                 newOrder.id = 'L' + Date.now();
                 window.state.orders.unshift(newOrder);
                 localStorage.setItem('3d_local_orders', JSON.stringify(window.state.orders));
-                window.render();
             }
             
-            document.getElementById('orderCust').value = ""; 
-            document.getElementById('orderPaid').value = ""; 
-            document.getElementById('orderPhone').value = "";
+            document.getElementById('orderCust').value = "";
+            document.getElementById('orderPaid').value = "";
             window.toast("הזמנה נשמרה!");
+            window.render();
         };
 
         window.markAsDone = async (id) => {
             try {
-                if(window.state.mode === 'cloud' && db) {
+                if(db && window.state.mode === 'cloud') {
                     await updateDoc(doc(db, ...BASE_PATH, 'orders', id), { status: "✅ מוכן" });
                 } else { throw "local"; }
             } catch (e) {
                 const o = window.state.orders.find(x => x.id === id);
                 if(o) o.status = "✅ מוכן";
                 localStorage.setItem('3d_local_orders', JSON.stringify(window.state.orders));
-                window.render();
             }
-            window.toast("מוכן למסירה!");
+            window.render();
         };
 
         window.addCatalogItem = async () => {
@@ -301,48 +221,39 @@
             const price = parseFloat(document.getElementById('catPrice').value);
             if(!name || !price) return window.toast("מלא שם ומחיר");
 
-            const newItem = { name, price, image: window.state.tempImage, timestamp: Date.now() };
+            const newItem = { name, price, timestamp: Date.now() };
 
             try {
-                if(window.state.mode === 'cloud' && db) {
+                if(db && window.state.mode === 'cloud') {
                     await addDoc(collection(db, ...BASE_PATH, 'products'), newItem);
                 } else { throw "local"; }
             } catch (e) {
                 newItem.id = 'LP' + Date.now();
                 window.state.products.unshift(newItem);
                 localStorage.setItem('3d_local_products', JSON.stringify(window.state.products));
-                window.render();
             }
 
             document.getElementById('catName').value = ""; 
             document.getElementById('catPrice').value = "";
-            window.state.tempImage = null; 
-            document.getElementById('canvasPlaceholder').classList.remove('hidden');
-            document.getElementById('aiPreview').classList.add('hidden');
-            window.toast("נוסף לקטלוג!");
+            window.toast("מוצר נוסף לקטלוג!");
+            window.render();
         };
 
         window.addExpense = async () => {
             const name = document.getElementById('expName').value;
             const price = parseFloat(document.getElementById('expPrice').value);
-            if(!name || !price) return window.toast("מלא פרטי הוצאה");
-            
-            const newExp = { name, price, timestamp: Date.now() };
-            
+            if(!name || !price) return window.toast("מלא פרטים");
+            const exp = { name, price, timestamp: Date.now() };
             try {
-                if(window.state.mode === 'cloud' && db) {
-                    await addDoc(collection(db, ...BASE_PATH, 'expenses'), newExp);
-                } else { throw "local"; }
+                if(db && window.state.mode === 'cloud') await addDoc(collection(db, ...BASE_PATH, 'expenses'), exp);
+                else throw "local";
             } catch(e) {
-                newExp.id = 'LE' + Date.now();
-                window.state.expenses.unshift(newExp);
+                exp.id = 'LE' + Date.now();
+                window.state.expenses.unshift(exp);
                 localStorage.setItem('3d_local_expenses', JSON.stringify(window.state.expenses));
-                window.render();
             }
-            
-            document.getElementById('expName').value = ""; 
-            document.getElementById('expPrice').value = "";
-            window.toast("הוצאה נרשמה!");
+            document.getElementById('expName').value = ""; document.getElementById('expPrice').value = "";
+            window.render();
         };
 
         window.render = () => {
@@ -353,22 +264,21 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('currentUserDisplay').innerText = `מחובר: ${window.state.user}`;
             
-            // Dropdown catalog
+            // Dropdown
             const s = document.getElementById('orderItemSelect');
-            s.innerHTML = '<option value="">בחר מוצר...</option>' + 
+            s.innerHTML = '<option value="">בחר מוצר מהקטלוג...</option>' + 
                 window.state.products.map(p => `<option value="${p.price}">${p.name} (${p.price}₪)</option>`).join('');
             
             // Stats
             const revenue = window.state.orders.reduce((a,b)=>a+(b.paid||0),0);
             const expenses = window.state.expenses.reduce((a,b)=>a+(b.price||0),0);
             const profit = revenue - expenses;
-            
             document.getElementById('stat-profit').innerText = profit + "₪";
-            document.getElementById('stat-profit').className = `text-6xl font-black mb-6 tracking-tighter ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            document.getElementById('stat-profit').style.color = profit >= 0 ? '#34d399' : '#f87171';
             document.getElementById('stat-revenue').innerText = revenue + "₪";
             document.getElementById('stat-expenses').innerText = expenses + "₪";
 
-            // Lists
+            // Order List
             document.getElementById('orderList').innerHTML = [...window.state.orders].sort((a,b)=>b.timestamp-a.timestamp).map(o => `
                 <div class="glass p-5 rounded-[30px] border-r-4 ${o.status === '✅ מוכן' ? 'border-emerald-500' : 'border-amber-500'}">
                     <div class="flex justify-between items-center">
@@ -376,70 +286,55 @@
                             <div class="font-bold text-lg">${o.customer}</div>
                             <div class="text-[10px] text-sky-400 font-bold uppercase">${o.item}</div>
                         </div>
-                        <div class="text-right flex items-center gap-3">
-                            ${o.phone ? `<button onclick="window.open('https://wa.me/972${o.phone.replace(/^0/,'')}?text=${encodeURIComponent('היי ' + o.customer + ', הדפסת ה-3D שלך מוכנה! ✨')}')" class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></button>` : ''}
+                        <div class="flex items-center gap-3">
+                            ${o.phone ? `<button onclick="window.open('https://wa.me/972${o.phone.replace(/^0/,'')}?text=${encodeURIComponent('היי ' + o.customer + ', ההזמנה שלך מוכנה! ✨')}')" class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></button>` : ''}
                             <div class="font-black text-xl">${o.paid}₪</div>
                         </div>
                     </div>
                 </div>
             `).join('') || '<p class="text-center opacity-20 py-10">אין מכירות עדיין</p>';
 
+            // Production List
             document.getElementById('prodList').innerHTML = window.state.orders.filter(o => o.status !== "✅ מוכן").map(o => `
                 <div class="glass p-5 rounded-[30px] flex justify-between items-center">
                     <div><div class="font-bold text-lg">${o.item}</div><div class="text-[11px] text-slate-400">לקוח: ${o.customer}</div></div>
-                    <button onclick="markAsDone('${o.id}')" class="w-14 h-14 rounded-2xl btn-ready text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"><i data-lucide="check" class="w-8 h-8"></i></button>
+                    <button onclick="markAsDone('${o.id || o.timestamp}')" class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg active:scale-90"><i data-lucide="check" class="w-8 h-8"></i></button>
                 </div>
-            `).join('') || '<p class="text-center opacity-20 py-10">תור ההדפסות ריק! ✅</p>';
+            `).join('') || '<p class="text-center opacity-20 py-10">תור ריק ✅</p>';
 
+            // Catalog List (Text only)
             document.getElementById('catalogList').innerHTML = window.state.products.map(p => `
-                <div class="glass p-3 rounded-[30px] space-y-2">
-                    <div class="aspect-square rounded-2xl overflow-hidden bg-slate-800">
-                        <img src="${p.image || 'https://placehold.co/400x400/0f172a/1e293b?text=3D'}" class="w-full h-full object-cover">
-                    </div>
-                    <div class="px-1 flex justify-between items-center">
-                        <div class="font-bold text-xs truncate max-w-[70%]">${p.name}</div>
-                        <div class="text-emerald-400 font-black text-sm">${p.price}₪</div>
-                    </div>
+                <div class="glass p-5 rounded-[25px] flex justify-between items-center">
+                    <div class="font-bold text-lg">${p.name}</div>
+                    <div class="text-emerald-400 font-black text-xl">${p.price}₪</div>
                 </div>
-            `).join('');
+            `).join('') || '<p class="text-center opacity-20 py-10">הקטלוג ריק</p>';
 
             lucide.createIcons();
         };
 
-        // Initialize Firebase if available
-        const init = async () => {
+        const start = async () => {
             window.render();
-            if (!FB_CONFIG) return;
+            const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if(!config) return;
+
             try {
-                const app = initializeApp(FB_CONFIG);
+                const app = initializeApp(config);
                 db = getFirestore(app);
                 const auth = getAuth(app);
                 onAuthStateChanged(auth, user => {
                     if (user) {
                         window.state.mode = 'cloud';
                         document.getElementById('cloudStatus').className = 'w-2 h-2 rounded-full bg-emerald-500';
-                        document.getElementById('connectionText').innerText = 'מחובר לענן';
-                        
-                        onSnapshot(collection(db, ...BASE_PATH, 'orders'), s => {
-                            window.state.orders = s.docs.map(d=>({id:d.id, ...d.data()}));
-                            window.render();
-                        });
-                        onSnapshot(collection(db, ...BASE_PATH, 'products'), s => {
-                            window.state.products = s.docs.map(d=>({id:d.id, ...d.data()}));
-                            window.render();
-                        });
-                        onSnapshot(collection(db, ...BASE_PATH, 'expenses'), s => {
-                            window.state.expenses = s.docs.map(d=>({id:d.id, ...d.data()}));
-                            window.render();
-                        });
-                    } else {
-                        signInAnonymously(auth);
-                    }
+                        onSnapshot(collection(db, ...BASE_PATH, 'orders'), s => { window.state.orders = s.docs.map(d=>({id:d.id, ...d.data()})); window.render(); });
+                        onSnapshot(collection(db, ...BASE_PATH, 'products'), s => { window.state.products = s.docs.map(d=>({id:d.id, ...d.data()})); window.render(); });
+                        onSnapshot(collection(db, ...BASE_PATH, 'expenses'), s => { window.state.expenses = s.docs.map(d=>({id:d.id, ...d.data()})); window.render(); });
+                    } else { signInAnonymously(auth); }
                 });
-            } catch(e) { console.error(e); }
+            } catch(e) { console.warn("Cloud Error, running Local mode."); }
         };
 
-        window.onload = init;
+        window.onload = start;
     </script>
 </body>
 </html>
