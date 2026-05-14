@@ -53,16 +53,19 @@
         .btn-ready { background: linear-gradient(135deg, #10b981, #059669); }
         
         .status-badge { font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; }
-        .status-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .status-done { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        
+        /* Loading animation for AI */
+        @keyframes pulse-sky {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.05); }
+        }
+        .ai-loading-pulse { animation: pulse-sky 2s infinite ease-in-out; }
 
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="pb-32">
-
     <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 glass px-6 py-3 rounded-full text-xs font-bold opacity-0 transition-all z-[300] border-sky-500/40 pointer-events-none"></div>
 
     <div id="app" class="max-w-md mx-auto p-6 pt-10">
@@ -87,6 +90,7 @@
                 <div class="flex items-center gap-2">
                     <h1 class="text-3xl font-black tracking-tighter">ניהול ענן</h1>
                     <div id="cloudStatus" class="w-2 h-2 rounded-full bg-slate-700"></div>
+                    <span id="connectionText" class="text-[8px] font-bold text-slate-500 uppercase">מאתחל...</span>
                 </div>
             </div>
             <button onclick="logout()" class="w-12 h-12 glass rounded-2xl flex items-center justify-center text-slate-500 hover:text-white transition-colors">
@@ -122,15 +126,23 @@
                     <input type="number" id="catPrice" placeholder="מחיר (₪)" class="flex-1">
                 </div>
 
-                <!-- AI Image Canvas Container -->
-                <div id="imageContainer" class="aspect-square glass rounded-3xl flex items-center justify-center overflow-hidden border-2 border-dashed border-white/10 relative">
-                    <canvas id="aiCanvas" width="400" height="400" class="w-full h-full hidden"></canvas>
-                    <div id="canvasPlaceholder" class="text-slate-500 text-[10px] italic text-center px-4">התמונה תופיע כאן</div>
+                <!-- Real AI Image Preview Container -->
+                <div id="imageContainer" class="aspect-square glass rounded-3xl flex items-center justify-center overflow-hidden border-2 border-dashed border-white/10 relative bg-slate-900/50">
+                    <img id="aiPreview" class="w-full h-full object-cover hidden" alt="AI Preview">
+                    <div id="canvasPlaceholder" class="text-slate-500 text-center px-4 flex flex-col items-center gap-3">
+                        <i data-lucide="image" class="w-8 h-8 opacity-20"></i>
+                        <span class="text-[10px] italic">התמונה תופיע כאן</span>
+                    </div>
+                    <!-- Loading Overlay -->
+                    <div id="aiLoading" class="absolute inset-0 bg-slate-950/80 items-center justify-center hidden flex-col gap-3">
+                        <div class="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-[10px] font-bold text-sky-400 ai-loading-pulse">ה-AI יוצר הדמיה אמיתית...</span>
+                    </div>
                 </div>
 
-                <button onclick="generateAiImage()" class="w-full glass bg-white/5 text-white py-4 rounded-[20px] text-xs font-bold border border-white/10 flex items-center justify-center gap-2">
-                    <i data-lucide="palette" class="w-4 h-4 text-emerald-400"></i>
-                    <span>צור תמונה עם AI</span>
+                <button id="genBtn" onclick="generateAiImage()" class="w-full glass bg-white/5 text-white py-4 rounded-[20px] text-xs font-bold border border-white/10 flex items-center justify-center gap-2 active:scale-95 transition-all">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-sky-400"></i>
+                    <span>צור תמונה עם AI אמיתי</span>
                 </button>
                 
                 <button onclick="addCatalogItem()" class="w-full bg-emerald-500 py-5 rounded-[22px] font-black text-lg active:scale-[0.98] transition-all">הוסף לקטלוג המשותף</button>
@@ -181,12 +193,16 @@
             orders: JSON.parse(localStorage.getItem('3d_local_orders') || '[]'),
             expenses: JSON.parse(localStorage.getItem('3d_local_expenses') || '[]'),
             tempImage: null,
-            isConnected: false
+            isConnected: false,
+            mode: 'local' // Default to local until cloud confirms
         };
 
         const init = async () => {
             window.render();
-            if (!FB_CONFIG) return;
+            if (!FB_CONFIG) {
+                updateStatus('offline', 'מצב מקומי (אין הגדרות)');
+                return;
+            }
             try {
                 const app = initializeApp(FB_CONFIG);
                 db = getFirestore(app);
@@ -194,123 +210,65 @@
                 
                 onAuthStateChanged(auth, (user) => {
                     if (user) setupRealtime();
-                    else signInAnonymously(auth).catch(e => console.error(e));
+                    else signInAnonymously(auth).catch(e => {
+                        console.error("Auth error:", e);
+                        updateStatus('error', 'שגיאת הזדהות');
+                    });
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error("Firebase init error:", e); 
+                updateStatus('error', 'שגיאת תקשורת');
+            }
         };
 
+        function updateStatus(type, text) {
+            const dot = document.getElementById('cloudStatus');
+            const label = document.getElementById('connectionText');
+            label.innerText = text;
+            
+            if(type === 'online') {
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
+                window.state.mode = 'cloud';
+            } else if(type === 'error') {
+                dot.className = 'w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]';
+                window.state.mode = 'local';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+                window.state.mode = 'local';
+            }
+        }
+
         function setupRealtime() {
-            const statusDot = document.getElementById('cloudStatus');
             const safeListen = (coll, key) => {
-                onSnapshot(collection(db, ...BASE_PATH, coll), s => {
-                    const data = s.docs.map(d => ({id: d.id, ...d.data()}));
-                    window.state[key] = data;
-                    localStorage.setItem(`3d_local_${key}`, JSON.stringify(data));
-                    window.state.isConnected = true;
-                    statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]';
-                    window.render();
-                }, (err) => {
-                    statusDot.className = 'w-2 h-2 rounded-full bg-amber-500';
-                });
+                try {
+                    onSnapshot(collection(db, ...BASE_PATH, coll), s => {
+                        const data = s.docs.map(d => ({id: d.id, ...d.data()}));
+                        window.state[key] = data;
+                        localStorage.setItem(`3d_local_${key}`, JSON.stringify(data));
+                        window.state.isConnected = true;
+                        updateStatus('online', 'מחובר לענן');
+                        window.render();
+                    }, (err) => {
+                        console.warn(`Permission Denied for ${coll}. Using local storage.`);
+                        updateStatus('error', 'מצב מקומי (אין הרשאות)');
+                    });
+                } catch(e) {
+                    updateStatus('error', 'שגיאת הרשאות');
+                }
             };
             safeListen('products', 'products');
             safeListen('orders', 'orders');
             safeListen('expenses', 'expenses');
         }
 
-        window.loginUser = (n) => {
-            window.state.user = n;
-            localStorage.setItem('3d_user', n);
-            window.render();
-            window.toast(`שלום ${n}!`);
-        };
-
-        window.logout = () => { localStorage.removeItem('3d_user'); location.reload(); };
-
-        window.toast = (m) => {
-            const t = document.getElementById('toast'); 
-            t.innerText = m; 
-            t.style.opacity = 1; 
-            t.style.transform = "translate(-50%, 0)";
-            setTimeout(() => { t.style.opacity = 0; t.style.transform = "translate(-50%, 20px)"; }, 2500);
-        };
-
-        window.suggestPrice = () => {
-            const name = document.getElementById('catName').value;
-            if(!name) return window.toast("הכנס שם מוצר קודם");
-            const price = Math.min(Math.floor(Math.random() * 8) + 7, 15);
-            document.getElementById('catPrice').value = price;
-            window.toast(`הצעה AI: ${price}₪`);
-        };
-
-        // INTERNAL AI IMAGE GENERATOR (CANVAS BASED)
-        window.generateAiImage = () => {
-            const name = document.getElementById('catName').value;
-            if(!name) return window.toast("הכנס שם מוצר");
-
-            const canvas = document.getElementById('aiCanvas');
-            const placeholder = document.getElementById('canvasPlaceholder');
-            const ctx = canvas.getContext('2d');
-            
-            placeholder.innerText = "מעבד נתונים...";
-            canvas.classList.add('hidden');
-
-            setTimeout(() => {
-                // Background
-                ctx.fillStyle = "#0f172a";
-                ctx.fillRect(0, 0, 400, 400);
-
-                // Grid Lines
-                ctx.strokeStyle = "rgba(56, 189, 248, 0.1)";
-                ctx.lineWidth = 1;
-                for(let i=0; i<400; i+=40) {
-                    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 400); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(400, i); ctx.stroke();
-                }
-
-                // Blueprint Box
-                ctx.strokeStyle = "#38bdf8";
-                ctx.lineWidth = 3;
-                ctx.setLineDash([5, 5]);
-                ctx.strokeRect(80, 80, 240, 240);
-                ctx.setLineDash([]);
-
-                // 3D Box Effect
-                ctx.strokeStyle = "#38bdf8";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(120, 150); ctx.lineTo(280, 150);
-                ctx.lineTo(280, 280); ctx.lineTo(120, 280); ctx.closePath();
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(150, 120); ctx.lineTo(310, 120);
-                ctx.lineTo(310, 250); ctx.lineTo(280, 280);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(310, 120); ctx.lineTo(280, 150);
-                ctx.stroke();
-
-                // Text (Hebrew Support)
-                ctx.fillStyle = "white";
-                ctx.font = "bold 24px Inter, sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText(name, 200, 360);
-                
-                ctx.fillStyle = "rgba(56, 189, 248, 0.5)";
-                ctx.font = "black 12px Inter, sans-serif";
-                ctx.fillText("3D CLOUD RENDER v2.0", 200, 40);
-
-                window.state.tempImage = canvas.toDataURL("image/png");
-                canvas.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                window.toast("הדמיה נוצרה!");
-            }, 600);
-        };
-
         window.markAsDone = async (id) => {
-            if(window.state.isConnected && db) {
-                await updateDoc(doc(db, ...BASE_PATH, 'orders', id), { status: "✅ מוכן" });
-            } else {
+            try {
+                if(window.state.mode === 'cloud' && db) {
+                    await updateDoc(doc(db, ...BASE_PATH, 'orders', id), { status: "✅ מוכן" });
+                } else {
+                    throw new Error("Local Mode");
+                }
+            } catch (e) {
                 const order = window.state.orders.find(o => o.id === id);
                 if(order) order.status = "✅ מוכן";
                 localStorage.setItem('3d_local_orders', JSON.stringify(window.state.orders));
@@ -339,9 +297,15 @@
                 date: new Date().toLocaleDateString('he-IL')
             };
 
-            if(window.state.isConnected && db) {
-                await addDoc(collection(db, ...BASE_PATH, 'orders'), newOrder);
-            } else saveLocal('orders', newOrder);
+            try {
+                if(window.state.mode === 'cloud' && db) {
+                    await addDoc(collection(db, ...BASE_PATH, 'orders'), newOrder);
+                } else {
+                    throw new Error("Local Mode");
+                }
+            } catch (e) {
+                saveLocal('orders', newOrder);
+            }
             
             document.getElementById('orderCust').value = ""; 
             document.getElementById('orderPaid').value = ""; 
@@ -357,15 +321,21 @@
 
             const newItem = { name, price, image: window.state.tempImage, timestamp: Date.now() };
 
-            if(window.state.isConnected && db) {
-                await addDoc(collection(db, ...BASE_PATH, 'products'), newItem);
-            } else saveLocal('products', newItem);
+            try {
+                if(window.state.mode === 'cloud' && db) {
+                    await addDoc(collection(db, ...BASE_PATH, 'products'), newItem);
+                } else {
+                    throw new Error("Local Mode");
+                }
+            } catch (e) {
+                saveLocal('products', newItem);
+            }
 
             document.getElementById('catName').value = ""; 
             document.getElementById('catPrice').value = "";
             window.state.tempImage = null; 
             document.getElementById('canvasPlaceholder').classList.remove('hidden');
-            document.getElementById('aiCanvas').classList.add('hidden');
+            document.getElementById('aiPreview').classList.add('hidden');
             window.toast("נוסף לקטלוג!");
         };
 
@@ -375,8 +345,16 @@
             if(!name || !price) return window.toast("מלא פרטי הוצאה");
             
             const newExp = { name, price, timestamp: Date.now(), buyer: window.state.user };
-            if(window.state.isConnected && db) await addDoc(collection(db, ...BASE_PATH, 'expenses'), newExp);
-            else saveLocal('expenses', newExp);
+            
+            try {
+                if(window.state.mode === 'cloud' && db) {
+                    await addDoc(collection(db, ...BASE_PATH, 'expenses'), newExp);
+                } else {
+                    throw new Error("Local Mode");
+                }
+            } catch(e) {
+                saveLocal('expenses', newExp);
+            }
             
             document.getElementById('expName').value = ""; 
             document.getElementById('expPrice').value = "";
@@ -403,10 +381,10 @@
                 return;
             }
             document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('currentUserDisplay').innerText = `שלום, ${window.state.user}`;
+            document.getElementById('currentUserDisplay').innerText = `מחובר: ${window.state.user}`;
             
             const s = document.getElementById('orderItemSelect');
-            s.innerHTML = '<option value="">בחר מוצר...</option>' + 
+            s.innerHTML = '<option value="">בחר מוצר מהקטלוג...</option>' + 
                 window.state.products.map(p => `<option value="${p.price}">${p.name} (${p.price}₪)</option>`).join('');
             
             const revenue = window.state.orders.reduce((a,b)=>a+(b.paid||0),0);
@@ -426,28 +404,28 @@
                             <div class="text-[10px] text-sky-400 font-bold uppercase">${o.item}</div>
                         </div>
                         <div class="text-right flex items-center gap-3">
-                            ${o.phone ? `<button onclick="window.open('https://wa.me/972${o.phone.replace(/^0/,'')}?text=${encodeURIComponent('היי, הזמנת ה-3D שלך מוכנה!')}')" class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></button>` : ''}
+                            ${o.phone ? `<button onclick="window.open('https://wa.me/972${o.phone.replace(/^0/,'')}?text=${encodeURIComponent('היי ' + o.customer + ', הדפסת ה-3D שלך מוכנה! ✨')}')" class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></button>` : ''}
                             <div class="font-black text-xl">${o.paid}₪</div>
                         </div>
                     </div>
                 </div>
-            `).join('') || '<p class="text-center opacity-20 py-10">אין מכירות</p>';
+            `).join('') || '<p class="text-center opacity-20 py-10">אין מכירות עדיין</p>';
 
             document.getElementById('prodList').innerHTML = window.state.orders.filter(o => o.status !== "✅ מוכן").map(o => `
                 <div class="glass p-5 rounded-[30px] flex justify-between items-center">
-                    <div><div class="font-bold">${o.item}</div><div class="text-[11px] text-slate-400">${o.customer}</div></div>
-                    <button onclick="markAsDone('${o.id}')" class="w-12 h-12 rounded-2xl btn-ready text-white flex items-center justify-center shadow-lg"><i data-lucide="check" class="w-6 h-6"></i></button>
+                    <div><div class="font-bold text-lg">${o.item}</div><div class="text-[11px] text-slate-400">לקוח: ${o.customer}</div></div>
+                    <button onclick="markAsDone('${o.id}')" class="w-14 h-14 rounded-2xl btn-ready text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform"><i data-lucide="check" class="w-8 h-8"></i></button>
                 </div>
-            `).join('') || '<p class="text-center opacity-20 py-10">הכל מודפס!</p>';
+            `).join('') || '<p class="text-center opacity-20 py-10">תור ההדפסות ריק! ✅</p>';
 
             document.getElementById('catalogList').innerHTML = window.state.products.map(p => `
-                <div class="glass p-3 rounded-[30px] space-y-2 group">
+                <div class="glass p-3 rounded-[30px] space-y-2">
                     <div class="aspect-square rounded-2xl overflow-hidden bg-slate-800">
-                        <img src="${p.image || 'https://placehold.co/300x300/0f172a/334155?text=3D'}" class="w-full h-full object-cover">
+                        <img src="${p.image || 'https://placehold.co/400x400/0f172a/1e293b?text=3D'}" class="w-full h-full object-cover">
                     </div>
                     <div class="px-1 flex justify-between items-center">
-                        <div class="font-bold text-[10px] truncate">${p.name}</div>
-                        <div class="text-emerald-400 font-black text-xs">${p.price}₪</div>
+                        <div class="font-bold text-xs truncate max-w-[70%]">${p.name}</div>
+                        <div class="text-emerald-400 font-black text-sm">${p.price}₪</div>
                     </div>
                 </div>
             `).join('');
