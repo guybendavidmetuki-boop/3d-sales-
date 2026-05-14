@@ -55,6 +55,10 @@
         .status-badge { font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; }
         .status-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
         .status-done { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+        /* Custom scrollbar for desktop */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="pb-32">
@@ -64,7 +68,7 @@
     <div id="app" class="max-w-md mx-auto p-6 pt-10">
         
         <!-- Login Screen -->
-        <div id="loginScreen" class="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center p-6">
+        <div id="loginScreen" class="fixed inset-0 z-[200] bg-slate-950 flex items-center justify-center p-6" style="display:none;">
             <div class="glass p-10 rounded-[45px] w-full max-w-sm text-center border-white/10 shadow-2xl">
                 <div class="w-20 h-20 bg-sky-500 rounded-[25px] mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-sky-500/20">
                     <i data-lucide="cloud" class="w-10 h-10 text-white"></i>
@@ -115,11 +119,11 @@
                 <input type="text" id="catName" placeholder="שם המוצר">
                 
                 <div class="flex gap-2">
-                    <button onclick="suggestPrice()" class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 rounded-2xl text-[10px] font-bold">הצע מחיר AI ✨</button>
+                    <button onclick="suggestPrice()" class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-4 rounded-2xl text-[10px] font-bold shrink-0">הצע מחיר AI ✨</button>
                     <input type="number" id="catPrice" placeholder="מחיר (₪)" class="flex-1">
                 </div>
 
-                <div id="imagePreview" class="min-h-[140px] glass rounded-3xl flex items-center justify-center overflow-hidden border-2 border-dashed border-white/10 text-slate-500 text-[10px] italic text-center px-4">התמונה תופיע כאן לאחר יצירה</div>
+                <div id="imagePreview" class="min-h-[140px] glass rounded-3xl flex items-center justify-center overflow-hidden border-2 border-dashed border-white/10 text-slate-500 text-[10px] italic text-center px-4">תצוגה מקדימה תופיע כאן</div>
 
                 <button onclick="generateAiImage()" class="w-full glass bg-white/5 text-white py-4 rounded-[20px] text-xs font-bold border border-white/10 flex items-center justify-center gap-2">
                     <i data-lucide="palette" class="w-4 h-4 text-emerald-400"></i>
@@ -162,11 +166,14 @@
         import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+        // Firebase Configuration
         const FB_CONFIG = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const APP_ID = "3d-print-cloud-v1";
         const BASE_PATH = ['artifacts', APP_ID, 'public', 'data'];
 
         let db = null, auth = null;
+        
+        // App State
         window.state = {
             user: localStorage.getItem('3d_user') || null,
             products: JSON.parse(localStorage.getItem('3d_local_products') || '[]'),
@@ -179,7 +186,7 @@
         const init = async () => {
             window.render();
             if (!FB_CONFIG) {
-                window.toast("מצב עבודה מקומי - אין הגדרות ענן");
+                console.warn("Offline Mode: No Firebase config found.");
                 return;
             }
             try {
@@ -251,16 +258,21 @@
         window.generateAiImage = () => {
             const name = document.getElementById('catName').value;
             if(!name) return window.toast("הכנס שם דגם ליצירת תמונה");
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '<div class="text-sky-400 font-bold animate-pulse text-[10px]">AI מחפש דגם...</div>';
             
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '<div class="text-sky-400 font-bold animate-pulse text-[10px]">AI יוצר שרטוט...</div>';
+            
+            // FIXED: Using a generic text to avoid Hebrew rendering issues on placehold.co
             setTimeout(() => {
-                const colors = ["38bdf8", "10b981", "f59e0b", "818cf8", "f43f5e"];
-                const color = colors[Math.floor(Math.random()*colors.length)];
-                window.state.tempImage = `https://placehold.co/600x600/0f172a/${color}?text=${encodeURIComponent(name)}`;
+                const colors = ["0f172a", "1e293b", "020617"];
+                const bgColor = colors[Math.floor(Math.random()*colors.length)];
+                const accentColor = "38bdf8";
+                
+                // We use "MODEL" instead of the Hebrew name to prevent ?????
+                window.state.tempImage = `https://placehold.co/600x600/${bgColor}/${accentColor}?text=3D_MODEL_BLUEPRINT`;
                 preview.innerHTML = `<img src="${window.state.tempImage}" class="w-full h-full object-cover">`;
                 window.toast("התמונה נוצרה בהצלחה!");
-            }, 1200);
+            }, 800);
         };
 
         window.markAsDone = async (id) => {
@@ -317,7 +329,7 @@
             const name = document.getElementById('catName').value;
             let price = parseFloat(document.getElementById('catPrice').value);
             if(!name || !price) return window.toast("מלא שם ומחיר למוצר");
-            if(price > 15) price = 15;
+            if(price > 15) price = 15; // MAX 15 NIS
 
             const newItem = { name, price, image: window.state.tempImage, timestamp: Date.now() };
 
@@ -334,7 +346,7 @@
             document.getElementById('catName').value = ""; 
             document.getElementById('catPrice').value = "";
             window.state.tempImage = null; 
-            document.getElementById('imagePreview').innerHTML = "התמונה תופיע כאן";
+            document.getElementById('imagePreview').innerHTML = "תצוגה מקדימה תופיע כאן";
             window.render();
         };
 
@@ -382,13 +394,13 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('currentUserDisplay').innerText = `מחובר: ${window.state.user}`;
             
-            // עדכון סלקטור מוצרים
+            // Product Selector Update
             const s = document.getElementById('orderItemSelect');
             const currentVal = s.value;
             s.innerHTML = '<option value="">בחר מוצר...</option>' + 
                 window.state.products.map(p => `<option value="${p.price}" ${currentVal == p.price ? 'selected' : ''}>${p.name} (${p.price}₪)</option>`).join('');
             
-            // חישובים כספיים
+            // Financial Stats
             const revenue = window.state.orders.reduce((a,b)=>a+(b.paid||0),0);
             const expenses = window.state.expenses.reduce((a,b)=>a+(b.price||0),0);
             const profit = revenue - expenses;
@@ -398,7 +410,7 @@
             document.getElementById('stat-revenue').innerText = revenue + "₪";
             document.getElementById('stat-expenses').innerText = expenses + "₪";
 
-            // רשימת מכירות
+            // Order List Rendering
             const sortedOrders = [...window.state.orders].sort((a,b) => b.timestamp - a.timestamp);
             document.getElementById('orderList').innerHTML = sortedOrders.map(o => `
                 <div class="glass p-5 rounded-[30px] border-r-4 ${o.status === '✅ מוכן' ? 'border-emerald-500' : 'border-amber-500'}">
@@ -423,7 +435,7 @@
                 </div>
             `).join('') || '<p class="text-center opacity-20 py-10">אין מכירות רשומות</p>';
 
-            // תור הדפסות
+            // Production Queue Rendering
             const pending = window.state.orders.filter(o => o.status !== "✅ מוכן");
             document.getElementById('prodList').innerHTML = pending.map(o => `
                 <div class="glass p-5 rounded-[30px] flex justify-between items-center">
@@ -437,11 +449,11 @@
                 </div>
             `).join('') || '<div class="text-center py-20"><i data-lucide="sparkles" class="mx-auto w-10 h-10 text-sky-500 opacity-30 mb-4"></i><p class="opacity-30 font-bold">הכל הודפס! ✨</p></div>';
 
-            // קטלוג מוצרים
+            // Catalog Rendering
             document.getElementById('catalogList').innerHTML = window.state.products.map(p => `
                 <div class="glass p-3 rounded-[30px] space-y-2 group">
                     <div class="aspect-square rounded-2xl overflow-hidden bg-slate-800">
-                        <img src="${p.image || 'https://placehold.co/300x300/0f172a/334155?text=?'}" class="w-full h-full object-cover transition-transform group-hover:scale-110" onerror="this.src='https://placehold.co/300?text=Model'">
+                        <img src="${p.image || 'https://placehold.co/300x300/0f172a/334155?text=3D'}" class="w-full h-full object-cover transition-transform group-hover:scale-110" onerror="this.src='https://placehold.co/300?text=3D'">
                     </div>
                     <div class="px-1 flex justify-between items-center">
                         <div class="font-bold text-[10px] truncate max-w-[70%]">${p.name}</div>
