@@ -9,11 +9,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .tab-content { display: none; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #020617; 
+            color: white; 
+            -webkit-tap-highlight-color: transparent; 
+            overflow-x: hidden; 
+        }
+        .glass { 
+            background: rgba(15, 23, 42, 0.7); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+        }
+        .tab-content { 
+            display: none; 
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .tab-content.active { 
+            display: block; 
+        }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
         
         input, select { 
             background: #0f172a !important; 
@@ -24,8 +42,12 @@
             outline: none; 
             width: 100%; 
             font-size: 16px;
+            transition: all 0.2s;
         }
-        input:focus { border-color: #38bdf8 !important; box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); }
+        input:focus { 
+            border-color: #38bdf8 !important; 
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); 
+        }
         .nav-btn { transition: all 0.3s; color: #64748b; }
         .nav-btn.active { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
         .btn-ready { background: linear-gradient(135deg, #10b981, #059669); }
@@ -55,7 +77,6 @@
             </div>
         </div>
 
-        <!-- Header -->
         <header class="flex justify-between items-center mb-10 px-2">
             <div>
                 <p id="currentUserDisplay" class="text-sky-400 text-[10px] font-black mb-1 uppercase tracking-widest"></p>
@@ -73,7 +94,7 @@
             <section class="glass p-7 rounded-[40px] space-y-4">
                 <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">מכירה חדשה</h3>
                 <input type="text" id="orderCust" placeholder="שם הלקוח">
-                <input type="tel" id="orderPhone" placeholder="טלפון לקוח">
+                <input type="tel" id="orderPhone" placeholder="טלפון לקוח (אופציונלי)">
                 <select id="orderItemSelect"><option value="">טוען קטלוג...</option></select>
                 <input type="number" id="orderPaid" placeholder="כמה שולם? (₪)">
                 <button onclick="addOrder()" class="w-full bg-sky-500 py-5 rounded-[22px] font-black text-lg shadow-xl shadow-sky-500/20 active:scale-[0.98] transition-all">שמור לענן 🚀</button>
@@ -88,7 +109,9 @@
 
         <div id="tab-catalog" class="tab-content space-y-8">
             <section class="glass p-7 rounded-[40px] space-y-5">
-                <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">הוספה לקטלוג (עד 15₪)</h3>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-widest">הוספה לקטלוג (עד 15₪)</h3>
+                </div>
                 <input type="text" id="catName" placeholder="שם המוצר">
                 
                 <div class="flex gap-2">
@@ -96,7 +119,7 @@
                     <input type="number" id="catPrice" placeholder="מחיר (₪)" class="flex-1">
                 </div>
 
-                <div id="imagePreview" class="min-h-[140px] glass rounded-3xl flex items-center justify-center overflow-hidden border-2 border-dashed border-white/10 text-slate-500 text-[10px] italic text-center px-4">לחץ למטה ליצירת תמונה</div>
+                <div id="imagePreview" class="min-h-[140px] glass rounded-3xl flex items-center justify-center overflow-hidden border-2 border-dashed border-white/10 text-slate-500 text-[10px] italic text-center px-4">התמונה תופיע כאן לאחר יצירה</div>
 
                 <button onclick="generateAiImage()" class="w-full glass bg-white/5 text-white py-4 rounded-[20px] text-xs font-bold border border-white/10 flex items-center justify-center gap-2">
                     <i data-lucide="palette" class="w-4 h-4 text-emerald-400"></i>
@@ -120,7 +143,7 @@
             
             <section class="glass p-7 rounded-[40px] space-y-5">
                 <h3 class="text-[11px] font-black text-rose-400 uppercase tracking-widest">רישום הוצאה</h3>
-                <input type="text" id="expName" placeholder="מה קנינו?">
+                <input type="text" id="expName" placeholder="מה קנינו? (למשל: פילמנט)">
                 <input type="number" id="expPrice" placeholder="כמה עלה? (₪)">
                 <button onclick="addExpense()" class="w-full bg-rose-500 py-5 rounded-[22px] font-black text-lg active:scale-[0.98] transition-all">הוסף הוצאה</button>
             </section>
@@ -136,7 +159,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const FB_CONFIG = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
@@ -156,7 +179,7 @@
         const init = async () => {
             window.render();
             if (!FB_CONFIG) {
-                window.toast("מצב עבודה מקומי (אין מפתח)");
+                window.toast("מצב עבודה מקומי - אין הגדרות ענן");
                 return;
             }
             try {
@@ -178,23 +201,25 @@
         function setupRealtime() {
             const statusDot = document.getElementById('cloudStatus');
             
-            const safeListen = (coll, callback, key) => {
-                return onSnapshot(collection(db, ...BASE_PATH, coll), s => {
-                    const data = s.docs.map(d => ({id: d.id, ...d.data()}));
-                    window.state[key] = data;
-                    localStorage.setItem(`3d_local_${key}`, JSON.stringify(data));
-                    window.state.isConnected = true;
-                    statusDot.classList.replace('bg-slate-700', 'bg-emerald-500');
-                    window.render();
-                }, (err) => {
-                    console.error(`Permission denied for ${key}, using local data.`);
-                    statusDot.classList.replace('bg-slate-700', 'bg-amber-500');
-                });
+            const safeListen = (coll, key) => {
+                try {
+                    return onSnapshot(collection(db, ...BASE_PATH, coll), s => {
+                        const data = s.docs.map(d => ({id: d.id, ...d.data()}));
+                        window.state[key] = data;
+                        localStorage.setItem(`3d_local_${key}`, JSON.stringify(data));
+                        window.state.isConnected = true;
+                        statusDot.classList.replace('bg-slate-700', 'bg-emerald-500');
+                        window.render();
+                    }, (err) => {
+                        console.warn(`Permission limited for ${key}`);
+                        statusDot.classList.replace('bg-slate-700', 'bg-amber-500');
+                    });
+                } catch(e) { console.error(e); }
             };
 
-            safeListen('products', null, 'products');
-            safeListen('orders', null, 'orders');
-            safeListen('expenses', null, 'expenses');
+            safeListen('products', 'products');
+            safeListen('orders', 'orders');
+            safeListen('expenses', 'expenses');
         }
 
         window.loginUser = (n) => {
@@ -202,6 +227,7 @@
             localStorage.setItem('3d_user', n);
             document.getElementById('loginScreen').style.display = 'none';
             window.render();
+            window.toast(`ברוך הבא, ${n}!`);
         };
 
         window.logout = () => { localStorage.removeItem('3d_user'); location.reload(); };
@@ -224,31 +250,29 @@
 
         window.generateAiImage = () => {
             const name = document.getElementById('catName').value;
-            if(!name) return window.toast("הכנס שם דגם");
+            if(!name) return window.toast("הכנס שם דגם ליצירת תמונה");
             const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '<div class="text-sky-400 font-bold animate-pulse text-[10px]">AI מייצר דגם...</div>';
+            preview.innerHTML = '<div class="text-sky-400 font-bold animate-pulse text-[10px]">AI מחפש דגם...</div>';
+            
             setTimeout(() => {
                 const colors = ["38bdf8", "10b981", "f59e0b", "818cf8", "f43f5e"];
                 const color = colors[Math.floor(Math.random()*colors.length)];
                 window.state.tempImage = `https://placehold.co/600x600/0f172a/${color}?text=${encodeURIComponent(name)}`;
                 preview.innerHTML = `<img src="${window.state.tempImage}" class="w-full h-full object-cover">`;
-                window.toast("התמונה נוצרה!");
-            }, 1000);
+                window.toast("התמונה נוצרה בהצלחה!");
+            }, 1200);
         };
 
         window.markAsDone = async (id) => {
-            const order = window.state.orders.find(o => o.id === id);
-            if(!order) return;
-            
             if(window.state.isConnected && db) {
                 try {
                     await updateDoc(doc(db, ...BASE_PATH, 'orders', id), { status: "✅ מוכן" });
-                    window.toast("סומן כבוצע בענן! ✨");
-                } catch (e) { window.toast("שגיאת הרשאה בענן"); }
+                    window.toast("מעולה! סומן כבוצע ✨");
+                } catch (e) { window.toast("שגיאה בעדכון ענן"); }
             } else {
-                order.status = "✅ מוכן";
+                const order = window.state.orders.find(o => o.id === id);
+                if(order) order.status = "✅ מוכן";
                 localStorage.setItem('3d_local_orders', JSON.stringify(window.state.orders));
-                window.toast("סומן כבוצע מקומי");
                 window.render();
             }
         };
@@ -259,7 +283,7 @@
             const select = document.getElementById('orderItemSelect');
             const paid = parseFloat(document.getElementById('orderPaid').value) || 0;
             
-            if(!cust || !select.value) return window.toast("חסרים פרטים");
+            if(!cust || !select.value) return window.toast("חסרים פרטי לקוח או מוצר");
             
             const newOrder = {
                 customer: cust, 
@@ -276,11 +300,11 @@
             if(window.state.isConnected && db) {
                 try {
                     await addDoc(collection(db, ...BASE_PATH, 'orders'), newOrder);
-                    window.toast("הזמנה נשלחה לענן!");
-                } catch (e) { window.toast("שגיאת הרשאה - נשמר מקומי"); saveLocal('orders', newOrder); }
+                    window.toast("הזמנה נרשמה בענן!");
+                } catch (e) { saveLocal('orders', newOrder); }
             } else {
                 saveLocal('orders', newOrder);
-                window.toast("נשמר בטלפון");
+                window.toast("נשמר בטלפון (אופליין)");
             }
             
             document.getElementById('orderCust').value = ""; 
@@ -292,7 +316,7 @@
         window.addCatalogItem = async () => {
             const name = document.getElementById('catName').value;
             let price = parseFloat(document.getElementById('catPrice').value);
-            if(!name || !price) return window.toast("מלא את כל הפרטים");
+            if(!name || !price) return window.toast("מלא שם ומחיר למוצר");
             if(price > 15) price = 15;
 
             const newItem = { name, price, image: window.state.tempImage, timestamp: Date.now() };
@@ -301,7 +325,7 @@
                 try {
                     await addDoc(collection(db, ...BASE_PATH, 'products'), newItem);
                     window.toast("נוסף לקטלוג המשותף!");
-                } catch (e) { saveLocal('products', newItem); window.toast("נשמר מקומי"); }
+                } catch (e) { saveLocal('products', newItem); }
             } else {
                 saveLocal('products', newItem);
                 window.toast("נוסף לקטלוג המקומי");
@@ -324,8 +348,8 @@
             if(window.state.isConnected && db) {
                 try {
                     await addDoc(collection(db, ...BASE_PATH, 'expenses'), newExp);
-                    window.toast("הוצאה נרשמה בענן");
-                } catch (e) { saveLocal('expenses', newExp); window.toast("נרשם מקומי"); }
+                    window.toast("הוצאה נרשמה!");
+                } catch (e) { saveLocal('expenses', newExp); }
             } else {
                 saveLocal('expenses', newExp);
                 window.toast("נרשם מקומי");
@@ -339,6 +363,7 @@
             item.id = 'local_' + Date.now();
             window.state[key].unshift(item);
             localStorage.setItem(`3d_local_${key}`, JSON.stringify(window.state[key]));
+            window.render();
         }
 
         window.switchTab = (id) => {
@@ -357,12 +382,13 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('currentUserDisplay').innerText = `מחובר: ${window.state.user}`;
             
+            // עדכון סלקטור מוצרים
             const s = document.getElementById('orderItemSelect');
             const currentVal = s.value;
             s.innerHTML = '<option value="">בחר מוצר...</option>' + 
                 window.state.products.map(p => `<option value="${p.price}" ${currentVal == p.price ? 'selected' : ''}>${p.name} (${p.price}₪)</option>`).join('');
             
-            const sortedOrders = [...window.state.orders].sort((a,b) => b.timestamp - a.timestamp);
+            // חישובים כספיים
             const revenue = window.state.orders.reduce((a,b)=>a+(b.paid||0),0);
             const expenses = window.state.expenses.reduce((a,b)=>a+(b.price||0),0);
             const profit = revenue - expenses;
@@ -372,6 +398,8 @@
             document.getElementById('stat-revenue').innerText = revenue + "₪";
             document.getElementById('stat-expenses').innerText = expenses + "₪";
 
+            // רשימת מכירות
+            const sortedOrders = [...window.state.orders].sort((a,b) => b.timestamp - a.timestamp);
             document.getElementById('orderList').innerHTML = sortedOrders.map(o => `
                 <div class="glass p-5 rounded-[30px] border-r-4 ${o.status === '✅ מוכן' ? 'border-emerald-500' : 'border-amber-500'}">
                     <div class="flex justify-between items-center">
@@ -395,6 +423,7 @@
                 </div>
             `).join('') || '<p class="text-center opacity-20 py-10">אין מכירות רשומות</p>';
 
+            // תור הדפסות
             const pending = window.state.orders.filter(o => o.status !== "✅ מוכן");
             document.getElementById('prodList').innerHTML = pending.map(o => `
                 <div class="glass p-5 rounded-[30px] flex justify-between items-center">
@@ -408,10 +437,11 @@
                 </div>
             `).join('') || '<div class="text-center py-20"><i data-lucide="sparkles" class="mx-auto w-10 h-10 text-sky-500 opacity-30 mb-4"></i><p class="opacity-30 font-bold">הכל הודפס! ✨</p></div>';
 
+            // קטלוג מוצרים
             document.getElementById('catalogList').innerHTML = window.state.products.map(p => `
                 <div class="glass p-3 rounded-[30px] space-y-2 group">
                     <div class="aspect-square rounded-2xl overflow-hidden bg-slate-800">
-                        <img src="${p.image || 'https://placehold.co/300x300/0f172a/334155?text=?'}" class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                        <img src="${p.image || 'https://placehold.co/300x300/0f172a/334155?text=?'}" class="w-full h-full object-cover transition-transform group-hover:scale-110" onerror="this.src='https://placehold.co/300?text=Model'">
                     </div>
                     <div class="px-1 flex justify-between items-center">
                         <div class="font-bold text-[10px] truncate max-w-[70%]">${p.name}</div>
